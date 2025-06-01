@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pembelian Tiket - Pilih Metode Inferensi</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Pembelian Tiket</h1>
+      <p>
+        Silakan isi form berikut untuk membeli tiket. Pilih metode inferensi
+        yang diinginkan.
+      </p>
+
+      <!-- Menampilkan error message jika umur kurang dari 17 -->
+      {% if error_message %}
+      <div class="error-message">{{ error_message }}</div>
+      {% endif %}
+
+      <form method="POST">
+        <label>
+          Umur:
+          <input type="number" name="umur" required />
+        </label>
+
+        <label>
+          Apakah Anda seorang member?
+          <input type="checkbox" name="member" />
+        </label>
+
+        <label>
+          Pilih Metode Inferensi:
+          <select name="method">
+            <option value="forward_chaining">Forward Chaining</option>
+            <option value="backward_chaining">Backward Chaining</option>
+          </select>
+        </label>
+
+        <button type="submit">Submit</button>
+      </form>
+
+      {% if applied_rules is not none %}
+      <div class="result">
+        <h4>Metode Inferensi yang Digunakan: {{ method_used }}</h4>
+        <h4>Aturan yang diterapkan:</h4>
+        <ul>
+          {% for rule in applied_rules %}
+          <li>{{ rule }}</li>
+          {% endfor %}
+        </ul>
+
+        <h4>Diagnosis:</h4>
+        <ul>
+          {% for key, value in updated_facts.items() %}
+          <li>{{ key }}: {{ value }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>
