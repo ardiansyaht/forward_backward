@@ -69,9 +69,28 @@ class ForwardChainingPage(ttk.Frame):
         self.combo_jenis_tiket.pack()
         self.combo_jenis_tiket.current(0)
         
+        # Frame untuk keterangan rules
+        frame_rule_desc = ttk.LabelFrame(self, text="Keterangan Rules")
+        frame_rule_desc.pack(fill="x", padx=10, pady=10)
+
+        rule_descriptions = {
+            "rule1": "Memeriksa umur > 17 tahun agar bisa beli tiket",
+            "rule2": "Member dapat diskon 10%",
+            "rule4": "Saldo minimal 100 agar bisa beli tiket",
+            "rule5": "Blacklist tidak diperbolehkan beli tiket",
+            "rule6": "Tanggal pembelian harus valid",
+            "rule7": "Jenis tiket harus VIP, Reguler, atau Ekonomi"
+        }
+
+        txt_rule_desc = tk.Text(frame_rule_desc, height=8, width=80)
+        txt_rule_desc.pack()
+
+        for k, v in rule_descriptions.items():
+            txt_rule_desc.insert(tk.END, f"{k}: {v}\n")
+        txt_rule_desc.config(state="disabled")
+
         ttk.Button(self, text="Proses", command=self.proses).pack(pady=10)
 
-        # Frame hasil dua kolom
         self.frame_hasil = ttk.Frame(self)
         self.frame_hasil.pack(fill="both", expand=True, padx=5, pady=5)
 
@@ -90,7 +109,6 @@ class ForwardChainingPage(ttk.Frame):
         ttk.Button(self, text="Kembali ke Menu Utama",
                    command=lambda: controller.show_frame(controller.homepage)).pack(pady=5)
 
-    # Aturan forward chaining
     def rule4(self, facts):
         if facts.get("saldo", 0) < 100.0:
             if facts.get("bisa_beli_tiket") != False:
@@ -202,7 +220,7 @@ class ForwardChainingPage(ttk.Frame):
             info_posisi = posisi_duduk.get(jenis_tiket, "Jenis tiket tidak diketahui.")
             hasil += f"Info tempat duduk: {info_posisi}\n"
         else:
-            hasil += "Kesimpulan: Status pembelian tiket tidak jelas.\n"
+            hasil += "Kesimpulan: Dibawah Umur 18 Tahun Tidak Bisa Membeli Tiket.\n"
 
         if updated_facts.get("diskon"):
             hasil += f"Diskon yang didapat: {updated_facts['diskon']*100}%\n"
@@ -215,8 +233,10 @@ class ForwardChainingPage(ttk.Frame):
 
         self.text_summary.insert(tk.END, hasil)
 
+
 class BackwardChainingPage(ttk.Frame):
     title = "Backward Chaining"
+    
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -253,9 +273,27 @@ class BackwardChainingPage(ttk.Frame):
         self.combo_goal.pack()
         self.combo_goal.current(0)
 
+        frame_rule_desc = ttk.LabelFrame(self, text="Keterangan Rules")
+        frame_rule_desc.pack(fill="x", padx=10, pady=10)
+
+        rule_descriptions = {
+            "rule1": "Memeriksa umur >= 17 tahun agar bisa beli tiket",
+            "rule2": "Member dapat diskon 10%",
+            "rule4": "Saldo minimal 100 agar bisa beli tiket",
+            "rule5": "Blacklist tidak diperbolehkan beli tiket",
+            "rule6": "Tanggal pembelian harus valid",
+            "rule7": "Jenis tiket harus VIP, Reguler, atau Ekonomi"
+        }
+
+        txt_rule_desc = tk.Text(frame_rule_desc, height=8, width=80)
+        txt_rule_desc.pack()
+
+        for k, v in rule_descriptions.items():
+            txt_rule_desc.insert(tk.END, f"{k}: {v}\n")
+        txt_rule_desc.config(state="disabled")
+
         ttk.Button(self, text="Proses", command=self.proses).pack(pady=10)
 
-        # Frame hasil dua kolom
         self.frame_hasil = ttk.Frame(self)
         self.frame_hasil.pack(fill="both", expand=True, padx=5, pady=5)
 
@@ -273,7 +311,7 @@ class BackwardChainingPage(ttk.Frame):
 
         ttk.Button(self, text="Kembali ke Menu Utama",
                    command=lambda: controller.show_frame(controller.homepage)).pack(pady=5)
-    
+
     def backward_chaining(self, facts, goal):
         applied_rules = []
 
@@ -305,7 +343,7 @@ class BackwardChainingPage(ttk.Frame):
                 applied_rules.append("rule4")
                 return applied_rules, facts
 
-        if goal == "bisa_beli_tiket" and facts.get("umur", 0) > 17 and facts.get("bisa_beli_tiket", True) != False:
+        if goal == "bisa_beli_tiket" and facts.get("umur", 0) >= 17 and facts.get("bisa_beli_tiket", True) != False:
             facts["bisa_beli_tiket"] = True
             applied_rules.append("rule1")
             return applied_rules, facts
@@ -321,17 +359,21 @@ class BackwardChainingPage(ttk.Frame):
     def proses(self):
         self.text_rules.delete("1.0", tk.END)
         self.text_summary.delete("1.0", tk.END)
+        
         try:
             umur = int(self.entry_umur.get())
         except ValueError:
             messagebox.showerror("Error", "Umur harus berupa angka")
             return
+        
         member = self.var_member.get()
+        
         try:
             saldo = float(self.entry_saldo.get())
         except ValueError:
             messagebox.showerror("Error", "Saldo harus berupa angka")
             return
+        
         blacklist = self.var_blacklist.get()
         tanggal_valid = self.var_tanggal_valid.get()
         jenis_tiket = self.combo_jenis_tiket.get()
@@ -352,31 +394,36 @@ class BackwardChainingPage(ttk.Frame):
             self.text_rules.insert(tk.END, f"- {rule}\n")
 
         hasil = ""
-        if updated_facts.get("bisa_beli_tiket") == False:
-            hasil += f"Tidak bisa membeli tiket karena: {updated_facts.get('alasan_tidak_bisa', 'Alasan tidak diketahui')}\n"
-        elif updated_facts.get("bisa_beli_tiket"):
-            hasil += "Kesimpulan: Anda bisa membeli tiket!\n"
-            posisi_duduk = {
-                "VIP": "Duduk di area VIP, dekat panggung, fasilitas terbaik.",
-                "Reguler": "Duduk di area reguler, kursi standar.",
-                "Ekonomi": "Duduk di area ekonomi, kursi paling belakang."
-            }
-            info_posisi = posisi_duduk.get(jenis_tiket, "Jenis tiket tidak diketahui.")
-            hasil += f"Info tempat duduk: {info_posisi}\n"
-        else:
-            hasil += "Kesimpulan: Status pembelian tiket tidak jelas.\n"
-        if updated_facts.get("diskon"):
-            hasil += f"Diskon yang didapat: {updated_facts['diskon']*100}%\n"
-        else:
-            hasil += "Anda tidak mendapatkan diskon.\n"
+
+        if goal == "diskon":
+            if updated_facts.get("diskon"):
+                hasil += "Kesimpulan: Anda mendapatkan diskon!\n"
+                hasil += f"Diskon yang didapat: {updated_facts['diskon']*100}%\n"
+            else:
+                hasil += "Kesimpulan: Anda tidak mendapatkan diskon.\n"
+
+            # **Bagian status beli tiket DIHILANGKAN supaya output hanya fokus diskon**
+
+        elif goal == "bisa_beli_tiket":
+            if updated_facts.get("bisa_beli_tiket") == False:
+                hasil += f"Tidak bisa membeli tiket karena: {updated_facts.get('alasan_tidak_bisa', 'Alasan tidak diketahui')}\n"
+            elif updated_facts.get("bisa_beli_tiket"):
+                hasil += "Kesimpulan: Anda bisa membeli tiket!\n"
+                posisi_duduk = {
+                    "VIP": "Duduk di area VIP, dekat panggung, fasilitas terbaik.",
+                    "Reguler": "Duduk di area reguler, kursi standar.",
+                    "Ekonomi": "Duduk di area ekonomi, kursi paling belakang."
+                }
+                info_posisi = posisi_duduk.get(jenis_tiket, "Jenis tiket tidak diketahui.")
+                hasil += f"Info tempat duduk: {info_posisi}\n"
+            else:
+                hasil += "Dibawah Umur 18 Tahun Tidak Bisa Membeli Tiket.\n"
 
         hasil += "\nFakta lengkap:\n"
         for k, v in updated_facts.items():
             hasil += f"  {k}: {v}\n"
 
         self.text_summary.insert(tk.END, hasil)
-
-
 if __name__ == "__main__":
     app = ExpertSystemApp()
     app.mainloop()
